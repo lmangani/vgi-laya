@@ -22,23 +22,36 @@
 > **No API keys. No cloud. No cost per query.** Laya runs entirely on your machine using
 > ModernBERT-large (~421M parameters). Your data never leaves your computer.
 
+This is the Hacker News taste-filter from the [VGI / TypeSafe writeup](https://query.farm/vgi/),
+adapted to local Laya — same SQL shape, no `CREATE SECRET`.
+
 ```sql
+FORCE INSTALL vgi FROM community;
+LOAD vgi;
+
+ATTACH 'hackernews' (TYPE vgi,
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
+
 ATTACH 'laya' (TYPE vgi,
   LOCATION 'uvx --from git+https://github.com/lmangani/vgi-laya vgi-laya');
 
--- Filter articles by your interests
-SELECT * FROM articles
-WHERE laya.main.is_interesting(title, 'About databases and distributed systems') > 0.5;
-
--- Classify support tickets
-SELECT body, c.choice AS team, c.confidence
-FROM tickets,
-     LATERAL laya.main.choice(body,
-         instructions => 'Which team should handle this?',
-         criteria => MAP {'shipping': 'Delivery issues',
-                          'billing': 'Payment problems',
-                          'support': 'General questions'}) c;
+SELECT title, url, interesting.noul
+FROM
+  (SELECT title, url FROM hackernews.new_stories LIMIT 500) hn_stories,
+  LATERAL laya.main.noul(
+    hn_stories.title,
+    instructions => 'Is this story interesting to someone who in data and databases
+                    (i.e. DuckDB) but also appreciates distributed systems, python,
+                    apache arrow'
+  ) interesting
+WHERE interesting.noul > 0.50
+ORDER BY interesting.noul DESC
+LIMIT 20;
 ```
+
+First run downloads the Laya model (~1.6GB). Once the model is in memory, scoring
+500 titles takes about 31 seconds (~16 titles/s). From a checkout, attach with
+`uv run laya_worker.py` instead of `uvx` (see [demo.sql](demo.sql)).
 
 ## What is Laya?
 
