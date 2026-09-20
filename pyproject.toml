@@ -1,0 +1,99 @@
+[project]
+name = "vgi-laya"
+dynamic = ["version"]
+description = "A VGI worker exposing Laya local AI inference to DuckDB/SQL — filter, classify, and score rows using ModernBERT"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Lorenzo Mangani", email = "lorenzo@mangani.dev" }]
+keywords = [
+    "vgi",
+    "duckdb",
+    "duckdb-extension",
+    "arrow",
+    "apache-arrow",
+    "laya",
+    "modernbert",
+    "classification",
+    "text-classification",
+    "local-inference",
+    "table-functions",
+    "ai",
+    "sql",
+    "filter",
+    "taste",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+requires-python = ">=3.13"
+dependencies = [
+    "vgi-python>=0.34.0",
+    "laya>=0.3.4",
+    "pyarrow>=15.0.0",
+]
+
+[project.optional-dependencies]
+# HTTP-serving extra — what serve.py needs
+serve = ["vgi-python[http]>=0.34.0"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.8,<0.9",
+    "mypy>=1.11",
+    "pyarrow-stubs",
+    "duckdb>=1.1",
+    "haybarn>=1.5",
+]
+
+[project.scripts]
+vgi-laya = "vgi_laya.worker:main"
+vgi-laya-http = "vgi_laya.worker:main_http"
+
+[project.urls]
+Homepage = "https://github.com/lmangani/vgi-laya"
+Documentation = "https://github.com/lmangani/vgi-laya#readme"
+Repository = "https://github.com/lmangani/vgi-laya"
+Issues = "https://github.com/lmangani/vgi-laya/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "vgi_laya/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vgi_laya"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "D", "C4"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+exclude = ["*.md"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
